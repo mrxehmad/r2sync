@@ -3,7 +3,7 @@
 	"name": "R2 Sync",
 	"version": "1.4.5",
 	"minAppVersion": "0.15.0",
-	"description": "Sync your Obsidian notes to Cloudflare R2 with bidirectional backup and automatic sync.",
+	"description": "Sync your notes to Cloudflare R2 with bidirectional backup and automatic sync.",
 	"author": "Ehmad",
 	"authorUrl": "https://github.com/mrxehmad",
 	"fundingUrl": "https://github.com/sponsors/mrxehmad",
