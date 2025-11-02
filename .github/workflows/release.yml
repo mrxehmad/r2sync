@@ -1,4 +1,4 @@
-name: Release Obsidian plugin
+name: Release Obsidian Plugin
 
 on:
   push:
@@ -10,43 +10,35 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          ref: master
+          # Using SSH to clone with your repo’s URL
+          repository: mrxehmad/r2sync
+          ssh-key: ${{ secrets.DEPLOY_KEY }} # or use fine-grained token via PAT in next step
 
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "18.x"
 
-      - name: Build plugin
+      - name: Install dependencies and build plugin
         run: |
-          npm install
+          npm ci
           npm run build
 
-      - name: Install GitHub CLI
-        run: |
-          type -p curl >/dev/null || apt install curl -y
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-          && apt update \
-          && apt install gh -y
-
-      - name: Create release
+      - name: Create GitHub Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.FINE_GRAINED_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
-          if [ -z "$tag" ]; then
-            echo "No tag found, skipping release creation"
-            exit 0
-          fi
+          echo "Creating release for tag: $tag"
 
+          # Create draft release with plugin files
           gh release create "$tag" \
-            --repo mrxehmad/r2sync \
-            --title="$tag" \
+            --repo "mrxehmad/r2sync" \
+            --title "$tag" \
             --draft \
             main.js manifest.json styles.css
