@@ -51,4 +51,4 @@ jobs:
             --repo "${{ github.repository }}" \
             --title "$version" \
             --notes "Release for version $version" \
-            main.js manifest.json
+            main.js manifest.json style.css
