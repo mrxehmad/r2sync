@@ -1,12 +1,12 @@
-name: Release Obsidian Plugin
+name: Release on Version Change
 
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - master
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,30 +15,49 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Using SSH to clone with your repo’s URL
-          repository: mrxehmad/r2sync
-          ssh-key: ${{ secrets.DEPLOY_KEY }} # or use fine-grained token via PAT in next step
+          fetch-depth: 2
+          token: ${{ secrets.FINE_GRAINED_TOKEN }}
 
-      - name: Use Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18.x"
 
-      - name: Install dependencies and build plugin
+      - name: Detect version change
+        id: version_check
+        run: |
+          # Extract version from manifest.json in current and previous commits
+          current_version=$(jq -r '.version' manifest.json)
+          previous_version=$(git show HEAD~1:manifest.json | jq -r '.version')
+
+          echo "Current version: $current_version"
+          echo "Previous version: $previous_version"
+
+          if [ "$current_version" != "$previous_version" ]; then
+            echo "Version changed from $previous_version to $current_version"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "version=$current_version" >> "$GITHUB_OUTPUT"
+          else
+            echo "No version change detected."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies and build
+        if: steps.version_check.outputs.changed == 'true'
         run: |
           npm ci
           npm run build
 
       - name: Create GitHub Release
+        if: steps.version_check.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.FINE_GRAINED_TOKEN }}
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
-          echo "Creating release for tag: $tag"
+          version="${{ steps.version_check.outputs.version }}"
+          echo "Creating release for version $version"
 
-          # Create draft release with plugin files
-          gh release create "$tag" \
+          gh release create "v$version" \
             --repo "mrxehmad/r2sync" \
-            --title "$tag" \
-            --draft \
+            --title "v$version" \
+            --notes "Automatic release for version $version" \
             main.js manifest.json styles.css
