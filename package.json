@@ -1,6 +1,6 @@
 {
 	"name": "r2sync",
-	"version": "1.4.4",
+	"version": "1.4.5",
 	"description": "Sync your Obsidian notes to Cloudflare R2 with bidirectional backup and automatic sync.",
 	"main": "main.js",
 	"scripts": {
