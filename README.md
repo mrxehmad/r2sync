@@ -1,94 +1,159 @@
-# Obsidian Sample Plugin
+# R2 Sync Plugin for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+A powerful Obsidian plugin that syncs your notes to Cloudflare R2 with bidirectional backup and automatic sync capabilities.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- 🔄 **Automatic Sync**: Sync files automatically when you save them
+- 🔄 **Bidirectional Sync**: Download changes from R2 and merge with local files
+- ⚙️ **Manual Controls**: Manual sync and connectivity testing
+- 📊 **Status Bar**: Real-time sync status and last sync time
+- 🔐 **Secure**: Uses your own R2 credentials
+- 📁 **Folder Support**: Sync specific folders or entire vault
+- 🔔 **Notifications**: Toast notifications for sync events
 
-## First time developing plugins?
+## Installation
 
-Quick starting guide for new plugin devs:
+### Development Setup
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. Clone this repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Releasing new releases
+3. Build the plugin:
+   ```bash
+   npm run build
+   ```
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+4. Copy the generated files to your Obsidian vault:
+   ```
+   <Vault>/.obsidian/plugins/r2sync/
+   ├── main.js
+   ├── manifest.json
+   └── styles.css
+   ```
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+5. Enable the plugin in Obsidian: **Settings → Community plugins → R2 Sync**
 
-## Adding your plugin to the community plugin list
+## Configuration
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### R2 Setup
 
-## How to use
+1. **Create R2 Bucket**: 
+   - Go to Cloudflare Dashboard → R2 Object Storage
+   - Create a new bucket
+   - Note your Account ID
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+2. **Create API Token**:
+   - Go to Cloudflare Dashboard → My Profile → API Tokens
+   - Create a custom token with R2 permissions
+   - Note your Access Key ID and Secret Access Key
 
-## Manually installing the plugin
+3. **Configure Plugin**:
+   - Open Obsidian Settings → Community plugins → R2 Sync
+   - Enter your R2 credentials:
+     - Account ID
+     - Access Key ID  
+     - Secret Access Key
+     - Bucket Name
+     - Region (usually "auto")
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### Sync Settings
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+- **Base Folder**: Specify a folder to sync (leave empty for entire vault)
+- **Auto Sync on Save**: Automatically sync when files are saved
+- **Bidirectional Sync**: Download and merge remote changes
 
-## Funding URL
+## Usage
 
-You can include funding URLs where people who use your plugin can financially support it.
+### Commands
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+The plugin provides several commands accessible via the Command Palette (Ctrl/Cmd + P):
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+- **Sync to R2**: Manually sync all files to R2
+- **Download from R2**: Download and merge remote changes
+- **Test R2 Connection**: Test your R2 configuration
+- **Sync Current File to R2**: Sync only the currently open file
+
+### Status Bar
+
+The status bar shows:
+- 🔄 "R2 Sync in progress..." when syncing
+- ✅ "R2 Last sync: X minutes ago" with last sync time
+- 📁 "R2 Sync ready" when ready
+
+### Settings Tab
+
+Access all configuration options in:
+**Settings → Community plugins → R2 Sync**
+
+## Security & Privacy
+
+- All data is stored in your own R2 bucket
+- No data is sent to third parties
+- Credentials are stored locally in Obsidian
+- The plugin only accesses files within your vault
+
+## Troubleshooting
+
+### Connection Issues
+
+1. **Test Connection**: Use the "Test R2 Connection" button in settings
+2. **Check Credentials**: Verify your R2 credentials are correct
+3. **Check Bucket**: Ensure the bucket exists and is accessible
+4. **Check Permissions**: Ensure your API token has R2 read/write permissions
+
+### Sync Issues
+
+1. **Check Status Bar**: Look for error messages in the status bar
+2. **Check Notifications**: Look for toast notifications with error details
+3. **Manual Sync**: Try manual sync to see specific error messages
+4. **Check Logs**: Open Developer Console (Ctrl/Cmd + Shift + I) for detailed logs
+
+### Performance
+
+- Large vaults may take time to sync initially
+- The plugin syncs files incrementally after the first sync
+- Consider using a specific folder instead of the entire vault for better performance
+
+## Development
+
+### Project Structure
+
+```
+src/
+├── settings.ts      # Settings interface and defaults
+├── r2Service.ts     # R2 API service
+├── syncManager.ts   # Sync logic and file management
+├── statusBar.ts     # Status bar component
+├── commands.ts      # Command definitions
+└── settingsTab.ts   # Settings UI
 ```
 
-If you have multiple URLs, you can also do:
+### Building
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+```bash
+# Development (watch mode)
+npm run dev
+
+# Production build
+npm run build
 ```
 
-## API Documentation
+## License
 
-See https://github.com/obsidianmd/obsidian-api
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## Support
+
+For issues and feature requests, please create an issue on the GitHub repository.
