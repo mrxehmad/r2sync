@@ -1,9 +1,12 @@
-name: Release on Version Change
+name: Release Obsidian Plugin
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number to release (leave blank to auto-detect from manifest.json)'
+        required: false
+        default: ''
 
 jobs:
   release:
@@ -15,7 +18,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
           token: ${{ secrets.FINE_GRAINED_TOKEN }}
 
       - name: Set up Node.js
@@ -23,41 +25,30 @@ jobs:
         with:
           node-version: "18.x"
 
-      - name: Detect version change
-        id: version_check
-        run: |
-          # Extract version from manifest.json in current and previous commits
-          current_version=$(jq -r '.version' manifest.json)
-          previous_version=$(git show HEAD~1:manifest.json | jq -r '.version')
-
-          echo "Current version: $current_version"
-          echo "Previous version: $previous_version"
-
-          if [ "$current_version" != "$previous_version" ]; then
-            echo "Version changed from $previous_version to $current_version"
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "version=$current_version" >> "$GITHUB_OUTPUT"
-          else
-            echo "No version change detected."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Install dependencies and build
-        if: steps.version_check.outputs.changed == 'true'
         run: |
           npm ci
           npm run build
 
+      - name: Determine release version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version="${{ github.event.inputs.version }}"
+          else
+            version=$(jq -r '.version' manifest.json)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing version: $version"
+
       - name: Create GitHub Release
-        if: steps.version_check.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.FINE_GRAINED_TOKEN }}
         run: |
-          version="${{ steps.version_check.outputs.version }}"
-          echo "Creating release for version $version"
-
+          version="${{ steps.version.outputs.version }}"
+          echo "Creating release for v$version"
           gh release create "v$version" \
             --repo "mrxehmad/r2sync" \
             --title "v$version" \
-            --notes "Automatic release for version $version" \
+            --notes "Release for version v$version" \
             main.js manifest.json styles.css
