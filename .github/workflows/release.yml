@@ -46,9 +46,9 @@ jobs:
           GH_TOKEN: ${{ secrets.FINE_GRAINED_TOKEN }}
         run: |
           version="${{ steps.version.outputs.version }}"
-          echo "Creating release for v$version"
-          gh release create "v$version" \
-            --repo "mrxehmad/r2sync" \
-            --title "v$version" \
-            --notes "Release for version v$version" \
-            main.js manifest.json styles.css
+          echo "Creating release for $version"
+          gh release create "$version" \
+            --repo "${{ github.repository }}" \
+            --title "$version" \
+            --notes "Release for version $version" \
+            main.js manifest.json
