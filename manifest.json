@@ -1,7 +1,7 @@
 {
 	"id": "r2sync",
 	"name": "R2 Sync",
-	"version": "1.5.2",
+	"version": "1.5.3",
 	"minAppVersion": "0.15.0",
 	"description": "Sync your notes to Cloudflare R2 with bidirectional backup and automatic sync.",
 	"author": "Ehmad",

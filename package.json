@@ -1,6 +1,6 @@
 {
 	"name": "r2sync",
-	"version": "1.5.2",
+	"version": "1.5.3",
 	"description": "Sync your notes to Cloudflare R2 with bidirectional backup and automatic sync.",
 	"main": "main.js",
 	"scripts": {
