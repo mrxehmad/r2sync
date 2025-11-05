@@ -55,12 +55,12 @@ export class SyncManager {
 
 		try {
 
-			const content = await this.app.vault.read(file);
+			const { content, contentType } = await this.readFileContentWithType(file);
 			const key = this.getFileKey(file);
 			
 			
 			
-			const success = await this.r2Service.uploadFile(key, content);
+			const success = await this.r2Service.uploadFile(key, content, contentType);
 			
 			if (success) {
 				new Notice(`✅ Synced ${file.name} to R2`);
@@ -107,11 +107,11 @@ export class SyncManager {
 			new Notice(`🔄 Starting sync of ${totalCount} files...`);
 
 			for (const file of files) {
-				const content = await this.app.vault.read(file);
+				const { content, contentType } = await this.readFileContentWithType(file);
 				const key = this.getFileKey(file);
 				
 				
-				const success = await this.r2Service.uploadFile(key, content);
+				const success = await this.r2Service.uploadFile(key, content, contentType);
 				if (success) {
 					successCount++;
 				}
@@ -318,6 +318,30 @@ export class SyncManager {
 			// If key doesn't start with base folder, use it as is
 			return key;
 		}
+	}
+
+	private async readFileContentWithType(file: TFile): Promise<{ content: string | Uint8Array; contentType: string }> {
+		const ext = file.extension.toLowerCase();
+		// Text formats
+		if (ext === 'md') {
+			return { content: await this.app.vault.read(file), contentType: 'text/markdown' };
+		}
+		if (ext === 'txt') {
+			return { content: await this.app.vault.read(file), contentType: 'text/plain' };
+		}
+		// Binary formats
+		const arrayBuffer = await this.app.vault.readBinary(file);
+		let contentType = 'application/octet-stream';
+		switch (ext) {
+			case 'png': contentType = 'image/png'; break;
+			case 'jpg':
+			case 'jpeg': contentType = 'image/jpeg'; break;
+			case 'gif': contentType = 'image/gif'; break;
+			case 'svg': contentType = 'image/svg+xml'; break;
+			case 'webp': contentType = 'image/webp'; break;
+			case 'pdf': contentType = 'application/pdf'; break;
+		}
+		return { content: new Uint8Array(arrayBuffer), contentType };
 	}
 
 	isSyncInProgress(): boolean {

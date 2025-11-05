@@ -140,15 +140,15 @@ export class R2ServiceObsidian {
 		}
 	}
 
-	async uploadFile(key: string, content: string): Promise<boolean> {
+async uploadFile(key: string, content: string | Uint8Array, contentType: string = 'text/plain'): Promise<boolean> {
 		try {
 			
 
-			const command = new PutObjectCommand({
+		const command = new PutObjectCommand({
 				Bucket: this.config.bucketName,
 				Key: key,
-				Body: content,
-				ContentType: 'text/plain'
+			Body: content,
+			ContentType: contentType
 			});
 
 			const response = await this.s3Client.send(command);
@@ -159,7 +159,7 @@ export class R2ServiceObsidian {
 		} catch (error) {
 			console.error('R2 upload failed:', error);
 			
-			new Notice(`Failed to upload ${key}: ${error.message}`);
+		new Notice(`Failed to upload ${key}: ${error.message}`);
 			return false;
 		}
 	}
