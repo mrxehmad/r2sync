@@ -49,4 +49,14 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 		}
 	});
 
+	// Scan and sync manually added (missing) files
+	plugin.addCommand({
+		id: 'r2sync-sync-missing-files',
+		name: 'Scan and sync manually added files',
+		callback: async () => {
+			statusBar.showSyncStatus('Scanning for manually added files...');
+			await syncManager.syncMissingFiles();
+		}
+	});
+
 }

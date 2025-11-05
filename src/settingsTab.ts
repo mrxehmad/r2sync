@@ -252,6 +252,27 @@ export class R2SyncSettingTab extends PluginSettingTab {
 					}, 3000);
 				}));
 
+		// Manual scan-and-sync for pasted files
+		new Setting(containerEl)
+			.setName('Scan and Sync Manually Added Files')
+			.setDesc('Scan the vault for files that were added outside Obsidian and upload only ones missing in R2')
+			.addButton(button => button
+				.setButtonText('Scan and Sync New')
+				.setCta()
+				.onClick(async () => {
+					button.setButtonText('Scanning...');
+					button.setDisabled(true);
+					
+					await this.plugin.syncManager.syncMissingFiles();
+					
+					button.setButtonText('Done');
+					button.setDisabled(false);
+					
+					setTimeout(() => {
+						button.setButtonText('Scan and Sync New');
+					}, 3000);
+				}));
+
 
 		new Setting(containerEl)
 			.setName('Create Backup')

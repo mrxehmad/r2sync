@@ -224,6 +224,49 @@ export class SyncManager {
 		}
 	}
 
+	// Scan vault and upload only files that are missing in R2 (useful for manual pastes)
+	async syncMissingFiles(): Promise<boolean> {
+		if (this.syncInProgress || !this.r2Service) {
+			return false;
+		}
+
+		this.syncInProgress = true;
+		this.settings.syncInProgress = true;
+
+		try {
+			const files = this.getFilesToSync();
+			const vaultName = this.app.vault.getName();
+			const baseFolder = this.settings.baseFolder || vaultName;
+			const remoteKeys = await this.r2Service.listFiles(baseFolder);
+			const remoteSet = new Set(remoteKeys);
+
+			let uploaded = 0;
+			for (const file of files) {
+				const key = this.getFileKey(file);
+				if (!remoteSet.has(key)) {
+					const { content, contentType } = await this.readFileContentWithType(file);
+					const ok = await this.r2Service.uploadFile(key, content, contentType);
+					if (ok) uploaded++;
+				}
+			}
+
+			this.settings.lastSyncTime = new Date().toISOString();
+			if (uploaded > 0) {
+				new Notice(`✅ Uploaded ${uploaded} newly detected files to R2`);
+			} else {
+				new Notice('No new files to upload');
+			}
+			return uploaded > 0;
+		} catch (error) {
+			console.error('Missing files sync error:', error);
+			new Notice(`Error syncing missing files: ${error.message}`);
+			return false;
+		} finally {
+			this.syncInProgress = false;
+			this.settings.syncInProgress = false;
+		}
+	}
+
 	async deleteRemoteForFile(file: TFile): Promise<boolean> {
 		if (!this.r2Service) {
 			return false;
@@ -254,32 +297,21 @@ export class SyncManager {
 	}
 
 	private getFilesToSync(): TFile[] {
-		// Get all files including media files
+		// Get all files
 		const allFiles = this.app.vault.getFiles();
 		const vaultName = this.app.vault.getName();
 		const baseFolder = this.settings.baseFolder || vaultName;
 		
-		// Filter files by extension and base folder
 		return allFiles.filter(file => {
-			const isSupportedFile = file.extension === 'md' || 
-				file.extension === 'png' || file.extension === 'jpg' || 
-				file.extension === 'jpeg' || file.extension === 'gif' || 
-				file.extension === 'svg' || file.extension === 'webp' ||
-				file.extension === 'pdf' || file.extension === 'txt';
-			
-			if (!isSupportedFile) return false;
+			// Skip Obsidian internal and backup folders
+			if (file.path.startsWith('.obsidian/')) return false;
+			if (file.path.startsWith('backups/')) return false;
 			
 			// If no base folder specified, sync all files
-			if (!this.settings.baseFolder) {
-				return true;
-			}
-			
-			// If base folder is set to vault name, include all files in the vault
-			if (baseFolder === vaultName) {
-				return true;
-			}
-			
-			// Filter by base folder
+			if (!this.settings.baseFolder) return true;
+			// If base folder equals vault name, include all files
+			if (baseFolder === vaultName) return true;
+			// Otherwise filter by base folder
 			return file.path.startsWith(baseFolder + '/') || file.path === baseFolder;
 		});
 	}

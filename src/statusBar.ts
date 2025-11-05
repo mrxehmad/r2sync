@@ -7,6 +7,7 @@ export class StatusBarComponent extends Component {
 	private updateInterval: number;
     private labelEl: HTMLSpanElement | null = null;
     private buttonEl: HTMLSpanElement | null = null;
+    private missingBtnEl: HTMLSpanElement | null = null;
 
 	constructor(statusBarItem: HTMLElement, syncManager: SyncManager) {
 		super();
@@ -16,7 +17,7 @@ export class StatusBarComponent extends Component {
 	}
 
 	onload() {
-		// Build UI: [label]  [Sync all]
+		// Build UI: [label]  [Sync all]  [Scan new]
 		this.statusBarItem.empty();
 		this.labelEl = this.statusBarItem.createEl('span', { text: '' });
 		this.buttonEl = this.statusBarItem.createEl('span', { text: ' Sync all' });
@@ -26,6 +27,16 @@ export class StatusBarComponent extends Component {
 		this.buttonEl.onclick = async () => {
 			this.showSyncStatus('Scanning vault and syncing...');
 			await this.syncManager.syncAllFiles();
+			this.updateStatus();
+		};
+
+		this.missingBtnEl = this.statusBarItem.createEl('span', { text: ' Scan new' });
+		this.missingBtnEl.addClass('r2sync-action');
+		this.missingBtnEl.style.marginLeft = '8px';
+		this.missingBtnEl.style.cursor = 'pointer';
+		this.missingBtnEl.onclick = async () => {
+			this.showSyncStatus('Scanning for manually added files...');
+			await this.syncManager.syncMissingFiles();
 			this.updateStatus();
 		};
 
