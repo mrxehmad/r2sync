@@ -19,25 +19,13 @@ export class R2Service {
 
 	async testConnection(): Promise<{ success: boolean; details: string }> {
 		try {
-			if (this.config.debugMode) {
-				console.log('🔍 R2 Debug: Testing connection...');
-				console.log('🔍 R2 Debug: Config:', {
-					accountId: this.config.accountId,
-					accessKeyId: this.config.accessKeyId,
-					bucketName: this.config.bucketName,
-					region: this.config.region,
-					customEndpoint: this.config.customEndpoint
-				});
-			}
+			
 
 			// Test by trying to list files
 			const response = await this.listFiles();
 			const success = Array.isArray(response);
 			
-			if (this.config.debugMode) {
-				console.log('🔍 R2 Debug: List files response:', response);
-				console.log('🔍 R2 Debug: Connection test result:', success);
-			}
+			
 
 			return {
 				success,
@@ -56,26 +44,15 @@ export class R2Service {
 
 	async uploadFile(key: string, content: string): Promise<boolean> {
 		try {
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Uploading file ${key}, content length: ${content.length}`);
-			}
 			
 			const response = await this.makeRequest('PUT', key, content);
 			
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Upload response status: ${response.status}`);
-				if (!response.ok) {
-					const errorText = await response.text();
-					console.log(`🔍 R2 Debug: Upload error response:`, errorText);
-				}
-			}
+			
 			
 			return response.ok;
 		} catch (error) {
 			console.error('R2 upload failed:', error);
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Upload error details:`, error);
-			}
+			
 			new Notice(`Failed to upload ${key}: ${error.message}`);
 			return false;
 		}
@@ -96,38 +73,21 @@ export class R2Service {
 
 	async listFiles(prefix: string = ''): Promise<string[]> {
 		try {
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Listing files with prefix: "${prefix}"`);
-			}
 			
 			const response = await this.makeRequest('GET', `?list-type=2&prefix=${encodeURIComponent(prefix)}`);
 			
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: List files response status: ${response.status}`);
-			}
+			
 			
 			if (response.ok) {
 				const xml = await response.text();
-				if (this.config.debugMode) {
-					console.log(`🔍 R2 Debug: List files XML response:`, xml);
-				}
 				const files = this.parseListResponse(xml);
-				if (this.config.debugMode) {
-					console.log(`🔍 R2 Debug: Parsed files:`, files);
-				}
 				return files;
 			} else {
-				if (this.config.debugMode) {
-					const errorText = await response.text();
-					console.log(`🔍 R2 Debug: List files error response:`, errorText);
-				}
+				// No debug logging
 			}
 			return [];
 		} catch (error) {
 			console.error('R2 list files failed:', error);
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: List files error details:`, error);
-			}
 			return [];
 		}
 	}
@@ -147,10 +107,7 @@ export class R2Service {
 		const baseUrl = this.config.customEndpoint || `https://${this.config.accountId}.r2.cloudflarestorage.com`;
 		const url = `${baseUrl}/${this.config.bucketName}/${key}`;
 		
-		if (this.config.debugMode) {
-			console.log(`🔍 R2 Debug: Making ${method} request to:`, url);
-			console.log(`🔍 R2 Debug: Body length:`, body?.length || 0);
-		}
+		
 		
 		// Try different authentication methods
 		const authHeader = await this.getAuthHeader(method, key, body);
@@ -165,9 +122,7 @@ export class R2Service {
 			headers['Content-Length'] = body.length.toString();
 		}
 
-		if (this.config.debugMode) {
-			console.log('🔍 R2 Debug: Request headers:', headers);
-		}
+		
 
 		try {
 			const response = await fetch(url, {
@@ -176,20 +131,11 @@ export class R2Service {
 				body: body || undefined,
 			});
 
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Response status:`, response.status);
-				const responseHeaders: Record<string, string> = {};
-				response.headers.forEach((value, key) => {
-					responseHeaders[key] = value;
-				});
-				console.log(`🔍 R2 Debug: Response headers:`, responseHeaders);
-			}
+			
 
 			return response;
 		} catch (error) {
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Fetch error:`, error);
-			}
+			
 			throw error;
 		}
 	}
@@ -201,9 +147,7 @@ export class R2Service {
 		// Simple AWS signature that might work with R2
 		const canonicalString = `${method}\n\n${contentType}\n${date}\n/${this.config.bucketName}/${key}`;
 		
-		if (this.config.debugMode) {
-			console.log('🔍 R2 Debug: Canonical string:', canonicalString);
-		}
+		
 		
 		// Try simple HMAC-SHA1 first (some R2 endpoints support this)
 		const signature = await this.createSimpleSignature(canonicalString);

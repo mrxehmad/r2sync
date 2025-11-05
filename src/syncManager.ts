@@ -42,10 +42,6 @@ export class SyncManager {
 		const result = await this.r2Service.testConnection();
 		new Notice(result.details);
 		
-		if (this.settings.debugMode) {
-			console.log('R2 Debug: Connection test details:', result.details);
-		}
-		
 		return result.success;
 	}
 
@@ -58,41 +54,28 @@ export class SyncManager {
 		this.settings.syncInProgress = true;
 
 		try {
-			if (this.settings.debugMode) {
-				console.log(`🔍 R2 Debug: Starting sync for file: ${file.name}`);
-				console.log(`🔍 R2 Debug: File path: ${file.path}`);
-			}
 
 			const content = await this.app.vault.read(file);
 			const key = this.getFileKey(file);
 			
-			if (this.settings.debugMode) {
-				console.log(`🔍 R2 Debug: File key: ${key}, Content length: ${content.length}`);
-				console.log(`🔍 R2 Debug: Base folder: ${this.settings.baseFolder || this.app.vault.getName()}`);
-			}
+			
 			
 			const success = await this.r2Service.uploadFile(key, content);
 			
 			if (success) {
 				new Notice(`✅ Synced ${file.name} to R2`);
 				this.settings.lastSyncTime = new Date().toISOString();
-				if (this.settings.debugMode) {
-					console.log(`🔍 R2 Debug: Successfully synced ${file.name}`);
-				}
+				
 			} else {
 				new Notice(`❌ Failed to sync ${file.name}`);
-				if (this.settings.debugMode) {
-					console.log(`🔍 R2 Debug: Failed to sync ${file.name}`);
-				}
+				
 			}
 			
 			return success;
 		} catch (error) {
 			console.error('Sync error:', error);
 			new Notice(`❌ Error syncing ${file.name}: ${error.message}`);
-			if (this.settings.debugMode) {
-				console.log(`🔍 R2 Debug: Sync error for ${file.name}:`, error);
-			}
+			
 			return false;
 		} finally {
 			this.syncInProgress = false;
@@ -119,13 +102,7 @@ export class SyncManager {
 			let successCount = 0;
 			let totalCount = files.length;
 
-			if (this.settings.debugMode) {
-				console.log(`🔍 R2 Debug: Found ${totalCount} files to sync`);
-				console.log(`🔍 R2 Debug: Base folder: ${this.settings.baseFolder || this.app.vault.getName()}`);
-				files.forEach(file => {
-					console.log(`🔍 R2 Debug: File: ${file.path} -> Key: ${this.getFileKey(file)}`);
-				});
-			}
+			
 
 			new Notice(`🔄 Starting sync of ${totalCount} files...`);
 
@@ -133,9 +110,6 @@ export class SyncManager {
 				const content = await this.app.vault.read(file);
 				const key = this.getFileKey(file);
 				
-				if (this.settings.debugMode) {
-					console.log(`🔍 R2 Debug: Syncing ${file.path} -> ${key}`);
-				}
 				
 				const success = await this.r2Service.uploadFile(key, content);
 				if (success) {
@@ -175,9 +149,7 @@ export class SyncManager {
 			let downloadedCount = 0;
 			let updatedCount = 0;
 
-			if (this.settings.debugMode) {
-				console.log(`🔍 R2 Debug: Found ${remoteFiles.length} remote files in ${baseFolder}`);
-			}
+			
 
 			for (const remoteKey of remoteFiles) {
 				// Skip backup files
@@ -197,9 +169,6 @@ export class SyncManager {
 							// Remote is different, update local
 							await this.app.vault.modify(localFile, remoteContent);
 							updatedCount++;
-							if (this.settings.debugMode) {
-								console.log(`🔍 R2 Debug: Updated local file ${localPath} with remote changes`);
-							}
 						}
 					}
 				} else {
@@ -217,9 +186,6 @@ export class SyncManager {
 						
 						await this.app.vault.create(localPath, remoteContent);
 						downloadedCount++;
-						if (this.settings.debugMode) {
-							console.log(`🔍 R2 Debug: Downloaded new file ${localPath} from remote`);
-						}
 					}
 				}
 			}
@@ -255,6 +221,35 @@ export class SyncManager {
 		} finally {
 			this.syncInProgress = false;
 			this.settings.syncInProgress = false;
+		}
+	}
+
+	async deleteRemoteForFile(file: TFile): Promise<boolean> {
+		if (!this.r2Service) {
+			return false;
+		}
+		// Only handle supported file types
+		const isSupportedFile = file.extension === 'md' || 
+			file.extension === 'png' || file.extension === 'jpg' || 
+			file.extension === 'jpeg' || file.extension === 'gif' || 
+			file.extension === 'svg' || file.extension === 'webp' ||
+			file.extension === 'pdf' || file.extension === 'txt';
+		if (!isSupportedFile) {
+			return false;
+		}
+		try {
+			const key = this.getFileKey(file);
+			const ok = await this.r2Service.deleteFile(key);
+			if (ok) {
+				new Notice(`🗑️ Deleted ${file.name} from R2`);
+				return true;
+			}
+			new Notice(`❌ Failed to delete ${file.name} from R2`);
+			return false;
+		} catch (error) {
+			console.error('Remote delete error:', error);
+			new Notice(`Error deleting from R2: ${error.message}`);
+			return false;
 		}
 	}
 

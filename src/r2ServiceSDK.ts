@@ -29,20 +29,12 @@ export class R2ServiceSDK {
 			forcePathStyle: true, // R2 requires path-style URLs
 		});
 
-		if (config.debugMode) {
-			console.log('🔍 R2 Debug: S3 Client initialized with config:', {
-				region: config.region,
-				endpoint: config.customEndpoint || `https://${config.accountId}.r2.cloudflarestorage.com`,
-				bucketName: config.bucketName
-			});
-		}
+		
 	}
 
 	async testConnection(): Promise<{ success: boolean; details: string }> {
 		try {
-			if (this.config.debugMode) {
-				console.log('🔍 R2 Debug: Testing connection with AWS SDK...');
-			}
+			
 
 			// Test by listing objects
 			const command = new ListObjectsV2Command({
@@ -52,9 +44,7 @@ export class R2ServiceSDK {
 
 			const response = await this.s3Client.send(command);
 			
-			if (this.config.debugMode) {
-				console.log('🔍 R2 Debug: List objects response:', response);
-			}
+			
 
 			const fileCount = response.Contents?.length || 0;
 			return {
@@ -72,9 +62,7 @@ export class R2ServiceSDK {
 
 	async uploadFile(key: string, content: string): Promise<boolean> {
 		try {
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Uploading file ${key}, content length: ${content.length}`);
-			}
+			
 
 			const command = new PutObjectCommand({
 				Bucket: this.config.bucketName,
@@ -85,16 +73,12 @@ export class R2ServiceSDK {
 
 			const response = await this.s3Client.send(command);
 			
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Upload response:`, response);
-			}
+			
 
 			return true;
 		} catch (error) {
 			console.error('R2 upload failed:', error);
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Upload error details:`, error);
-			}
+			
 			new Notice(`Failed to upload ${key}: ${error.message}`);
 			return false;
 		}
@@ -102,9 +86,7 @@ export class R2ServiceSDK {
 
 	async downloadFile(key: string): Promise<string | null> {
 		try {
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Downloading file ${key}`);
-			}
+			
 
 			const command = new GetObjectCommand({
 				Bucket: this.config.bucketName,
@@ -113,9 +95,7 @@ export class R2ServiceSDK {
 
 			const response = await this.s3Client.send(command);
 			
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Download response:`, response);
-			}
+			
 
 			// Convert stream to string
 			const chunks: Uint8Array[] = [];
@@ -138,18 +118,14 @@ export class R2ServiceSDK {
 			return content;
 		} catch (error) {
 			console.error('R2 download failed:', error);
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Download error details:`, error);
-			}
+			
 			return null;
 		}
 	}
 
 	async listFiles(prefix: string = ''): Promise<string[]> {
 		try {
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Listing files with prefix: "${prefix}"`);
-			}
+			
 
 			const command = new ListObjectsV2Command({
 				Bucket: this.config.bucketName,
@@ -158,31 +134,23 @@ export class R2ServiceSDK {
 
 			const response = await this.s3Client.send(command);
 			
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: List files response:`, response);
-			}
+			
 
 			const files = response.Contents?.map(obj => obj.Key || '') || [];
 			
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Found files:`, files);
-			}
+			
 
 			return files;
 		} catch (error) {
 			console.error('R2 list files failed:', error);
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: List files error details:`, error);
-			}
+			
 			return [];
 		}
 	}
 
 	async deleteFile(key: string): Promise<boolean> {
 		try {
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Deleting file ${key}`);
-			}
+			
 
 			const command = new DeleteObjectCommand({
 				Bucket: this.config.bucketName,
@@ -191,16 +159,12 @@ export class R2ServiceSDK {
 
 			const response = await this.s3Client.send(command);
 			
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Delete response:`, response);
-			}
+			
 
 			return true;
 		} catch (error) {
 			console.error('R2 delete failed:', error);
-			if (this.config.debugMode) {
-				console.log(`🔍 R2 Debug: Delete error details:`, error);
-			}
+			
 			return false;
 		}
 	}

@@ -10,6 +10,7 @@ export default class R2SyncPlugin extends Plugin {
 	syncManager: SyncManager;
 	statusBar: StatusBarComponent;
 	private syncTimeout: number | null = null;
+	private debounceId: number = 0;
 
 	async onload() {
 		await this.loadSettings();
@@ -43,12 +44,28 @@ export default class R2SyncPlugin extends Plugin {
 		// Add settings tab
 		this.addSettingTab(new R2SyncSettingTab(this.app, this));
 
-		// Register file save event for auto-sync with debouncing
+		// Register file events for auto-sync with debouncing
 		if (this.settings.autoSync) {
 			this.registerEvent(
 				this.app.vault.on('modify', async (file: TFile) => {
-					if (file instanceof TFile && (file.extension === 'md' || file.extension === 'png' || file.extension === 'jpg' || file.extension === 'jpeg' || file.extension === 'gif' || file.extension === 'svg' || file.extension === 'webp')) {
+					if (file instanceof TFile && (file.extension === 'md' || file.extension === 'png' || file.extension === 'jpg' || file.extension === 'jpeg' || file.extension === 'gif' || file.extension === 'svg' || file.extension === 'webp' || file.extension === 'pdf' || file.extension === 'txt')) {
 						this.debouncedSync(file);
+					}
+				})
+			);
+			// Sync new files as they are created (e.g., imported from old vault)
+			this.registerEvent(
+				this.app.vault.on('create', async (file) => {
+					if (file instanceof TFile && (file.extension === 'md' || file.extension === 'png' || file.extension === 'jpg' || file.extension === 'jpeg' || file.extension === 'gif' || file.extension === 'svg' || file.extension === 'webp' || file.extension === 'pdf' || file.extension === 'txt')) {
+						this.debouncedSync(file);
+					}
+				})
+			);
+			// Propagate deletions to R2
+			this.registerEvent(
+				this.app.vault.on('delete', async (file) => {
+					if (file instanceof TFile) {
+						await this.syncManager.deleteRemoteForFile(file);
 					}
 				})
 			);
@@ -89,10 +106,16 @@ export default class R2SyncPlugin extends Plugin {
 		if (this.syncTimeout) {
 			clearTimeout(this.syncTimeout);
 		}
+		// Advance token so only latest timeout runs
+		this.debounceId++;
+		const currentId = this.debounceId;
 
 		// Set new timeout with configured delay
 		this.syncTimeout = window.setTimeout(async () => {
-			await this.syncManager.syncFile(file);
+			// Only execute if this is the latest scheduled sync
+			if (currentId === this.debounceId) {
+				await this.syncManager.syncFile(file);
+			}
 			this.syncTimeout = null;
 		}, this.settings.syncDelay * 1000);
 	}
