@@ -5,6 +5,8 @@ export class StatusBarComponent extends Component {
 	private statusBarItem: HTMLElement;
 	private syncManager: SyncManager;
 	private updateInterval: number;
+    private labelEl: HTMLSpanElement | null = null;
+    private buttonEl: HTMLSpanElement | null = null;
 
 	constructor(statusBarItem: HTMLElement, syncManager: SyncManager) {
 		super();
@@ -14,6 +16,19 @@ export class StatusBarComponent extends Component {
 	}
 
 	onload() {
+		// Build UI: [label]  [Sync all]
+		this.statusBarItem.empty();
+		this.labelEl = this.statusBarItem.createEl('span', { text: '' });
+		this.buttonEl = this.statusBarItem.createEl('span', { text: ' Sync all' });
+		this.buttonEl.addClass('r2sync-action');
+		this.buttonEl.style.marginLeft = '8px';
+		this.buttonEl.style.cursor = 'pointer';
+		this.buttonEl.onclick = async () => {
+			this.showSyncStatus('Scanning vault and syncing...');
+			await this.syncManager.syncAllFiles();
+			this.updateStatus();
+		};
+
 		this.updateStatus();
 		// Update status every 30 seconds
 		this.updateInterval = window.setInterval(() => {
@@ -28,8 +43,9 @@ export class StatusBarComponent extends Component {
 	}
 
 	updateStatus() {
+		if (!this.labelEl) return;
 		if (this.syncManager.isSyncInProgress()) {
-			this.statusBarItem.setText('R2 Sync in progress...');
+			this.labelEl.setText('R2 Sync in progress...');
 			this.statusBarItem.addClass('r2sync-syncing');
 		} else {
 			const lastSync = this.syncManager.getLastSyncTime();
@@ -52,16 +68,17 @@ export class StatusBarComponent extends Component {
 					timeAgo = 'Just now';
 				}
 
-				this.statusBarItem.setText(`R2 Last sync: ${timeAgo}`);
+				this.labelEl.setText(`R2 Last sync: ${timeAgo}`);
 			} else {
-				this.statusBarItem.setText('R2 Sync ready');
+				this.labelEl.setText('R2 Sync ready');
 			}
 			this.statusBarItem.removeClass('r2sync-syncing');
 		}
 	}
 
 	showSyncStatus(message: string) {
-		this.statusBarItem.setText(message);
+		if (!this.labelEl) return;
+		this.labelEl.setText(message);
 		setTimeout(() => {
 			this.updateStatus();
 		}, 3000);
