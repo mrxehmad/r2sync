@@ -1,0 +1,53 @@
+/* R2 Sync Plugin Styles */
+
+.r2sync-syncing {
+	animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+	0% { opacity: 1; }
+	50% { opacity: 0.5; }
+	100% { opacity: 1; }
+}
+
+.r2sync-status-container {
+	margin-top: 1rem;
+	padding: 0.5rem;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.r2sync-status-container p {
+	margin: 0.25rem 0;
+	font-size: 0.9rem;
+}
+
+/* Settings tab styling */
+.setting-item-description {
+	font-size: 0.85rem;
+	color: var(--text-muted);
+}
+
+/* Button styling in settings */
+.setting-item-control button {
+	margin-top: 0.5rem;
+}
+
+.setting-item-control button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Ribbon button styling */
+.r2sync-ribbon-class {
+	cursor: pointer;
+	transition: transform 0.2s ease;
+}
+
+.r2sync-ribbon-class:hover {
+	transform: scale(1.1);
+}
+
+.r2sync-ribbon-class:active {
+	transform: scale(0.95);
+}
