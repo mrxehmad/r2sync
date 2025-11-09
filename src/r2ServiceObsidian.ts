@@ -14,7 +14,7 @@ export interface R2Config {
 
 // Custom HTTP handler that uses Obsidian's requestUrl instead of fetch
 class ObsidianHttpHandler extends FetchHttpHandler {
-	async handle(request: any, options: any = {}): Promise<{ response: any }> {
+	async handle(request: { path: string; query?: Record<string, string>; protocol: string; hostname: string; port?: number; method: string; headers: Record<string, string>; body?: Uint8Array }, options: { abortSignal?: AbortSignal } = {}): Promise<{ response: { headers: Record<string, string>; statusCode: number; body: ReadableStream<Uint8Array> } }> {
 		if (options.abortSignal?.aborted) {
 			const abortError = new Error("Request aborted");
 			abortError.name = "AbortError";
@@ -48,7 +48,7 @@ class ObsidianHttpHandler extends FetchHttpHandler {
 			contentType = transformedHeaders["content-type"];
 		}
 
-		let transformedBody: any = body;
+		let transformedBody: Uint8Array | undefined = body;
 		if (ArrayBuffer.isView(body)) {
 			transformedBody = new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
 		}
@@ -61,31 +61,27 @@ class ObsidianHttpHandler extends FetchHttpHandler {
 			contentType: contentType,
 		};
 
-		try {
-			const rsp = await requestUrl(param);
-			const headers = rsp.headers;
-			const headersLower: Record<string, string> = {};
-			for (const key of Object.keys(headers)) {
-				headersLower[key.toLowerCase()] = headers[key];
-			}
-
-			const stream = new ReadableStream<Uint8Array>({
-				start(controller) {
-					controller.enqueue(new Uint8Array(rsp.arrayBuffer));
-					controller.close();
-				},
-			});
-
-			return {
-				response: {
-					headers: headersLower,
-					statusCode: rsp.status,
-					body: stream,
-				},
-			};
-		} catch (error) {
-			throw error;
+		const rsp = await requestUrl(param);
+		const headers = rsp.headers;
+		const headersLower: Record<string, string> = {};
+		for (const key of Object.keys(headers)) {
+			headersLower[key.toLowerCase()] = headers[key];
 		}
+
+		const stream = new ReadableStream<Uint8Array>({
+			start(controller) {
+				controller.enqueue(new Uint8Array(rsp.arrayBuffer));
+				controller.close();
+			},
+		});
+
+		return {
+			response: {
+				headers: headersLower,
+				statusCode: rsp.status,
+				body: stream,
+			},
+		};
 	}
 }
 
@@ -151,10 +147,7 @@ async uploadFile(key: string, content: string | Uint8Array, contentType: string 
 			ContentType: contentType
 			});
 
-			const response = await this.s3Client.send(command);
-			
-			
-
+			await this.s3Client.send(command);
 			return true;
 		} catch (error) {
 			console.error('R2 upload failed:', error);
@@ -237,10 +230,7 @@ async uploadFile(key: string, content: string | Uint8Array, contentType: string 
 				Key: key
 			});
 
-			const response = await this.s3Client.send(command);
-			
-			
-
+			await this.s3Client.send(command);
 			return true;
 		} catch (error) {
 			console.error('R2 delete failed:', error);
@@ -292,7 +282,7 @@ async uploadFile(key: string, content: string | Uint8Array, contentType: string 
 									folderPath: data.folderPath
 								});
 							}
-						} catch (e) {
+						} catch {
 							// Skip invalid backup markers
 						}
 					}

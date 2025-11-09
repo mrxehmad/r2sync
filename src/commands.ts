@@ -6,8 +6,8 @@ import { R2SyncSettings } from './settings';
 export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; saveSettings: () => Promise<void> }, syncManager: SyncManager, statusBar: StatusBarComponent) {
 	// Test connection command
 	plugin.addCommand({
-		id: 'r2sync-test-connection',
-		name: 'Test R2 Connection',
+		id: 'test-connection',
+		name: 'Test R2 connection',
 		callback: async () => {
 			statusBar.showSyncStatus('🔄 Testing R2 connection...');
 			await syncManager.testConnection();
@@ -17,8 +17,8 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 
 	// Sync current file command
 	plugin.addCommand({
-		id: 'r2sync-sync-current-file',
-		name: 'Sync Current File to R2',
+		id: 'sync-current-file',
+		name: 'Sync current file to R2',
 		editorCallback: async (editor, view) => {
 			const file = view.file;
 			if (file) {
@@ -30,8 +30,8 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 
 	// Export credentials command
 	plugin.addCommand({
-		id: 'r2sync-export-credentials',
-		name: 'Export R2 Credentials',
+		id: 'export-credentials',
+		name: 'Export R2 credentials',
 		callback: async () => {
 			const credentials = syncManager.exportCredentials();
 			await navigator.clipboard.writeText(credentials);
@@ -41,7 +41,7 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 
 	// Manual sync command (moved to last position)
 	plugin.addCommand({
-		id: 'r2sync-manual-sync',
+		id: 'manual-sync',
 		name: 'Sync to R2 (with remote changes)',
 		callback: async () => {
 			statusBar.showSyncStatus('Starting manual sync...');
@@ -51,7 +51,7 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 
 	// Scan and sync manually added (missing) files
 	plugin.addCommand({
-		id: 'r2sync-sync-missing-files',
+		id: 'sync-missing-files',
 		name: 'Scan and sync manually added files',
 		callback: async () => {
 			statusBar.showSyncStatus('Scanning for manually added files...');

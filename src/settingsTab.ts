@@ -1,10 +1,21 @@
 import { App, PluginSettingTab, Setting, Plugin } from 'obsidian';
 import { R2SyncSettings } from './settings';
 
-export class R2SyncSettingTab extends PluginSettingTab {
-	plugin: Plugin & { settings: R2SyncSettings; syncManager: any; saveSettings: () => Promise<void> };
+type SyncManager = {
+	testConnection: () => Promise<boolean>;
+	syncAllFiles: () => Promise<boolean>;
+	syncMissingFiles: () => Promise<boolean>;
+	createBackup: (folderPath: string) => Promise<boolean>;
+	cleanupOldBackups: () => Promise<number>;
+	exportCredentials: () => string;
+	importCredentials: (data: string) => boolean;
+	updateSettings: (settings: R2SyncSettings) => void;
+};
 
-	constructor(app: App, plugin: Plugin & { settings: R2SyncSettings; syncManager: any; saveSettings: () => Promise<void> }) {
+export class R2SyncSettingTab extends PluginSettingTab {
+	plugin: Plugin & { settings: R2SyncSettings; syncManager: SyncManager; saveSettings: () => Promise<void> };
+
+	constructor(app: App, plugin: Plugin & { settings: R2SyncSettings; syncManager: SyncManager; saveSettings: () => Promise<void> }) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -13,16 +24,16 @@ export class R2SyncSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'R2 Sync Settings' });
+		new Setting(containerEl).setName('R2 sync settings').setHeading();
 
 		// R2 Configuration Section
-		containerEl.createEl('h3', { text: 'Cloudflare R2 Configuration' });
+		new Setting(containerEl).setName('Cloudflare R2 configuration').setHeading();
 
 		new Setting(containerEl)
 			.setName('Account ID')
-			.setDesc('Your Cloudflare R2 Account ID')
+			.setDesc('Your Cloudflare R2 account ID')
 			.addText(text => text
-				.setPlaceholder('Enter your R2 Account ID')
+				.setPlaceholder('Enter your R2 account ID')
 				.setValue(this.plugin.settings.r2AccountId)
 				.onChange(async (value) => {
 					this.plugin.settings.r2AccountId = value;
@@ -31,10 +42,10 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Access Key ID')
-			.setDesc('Your R2 Access Key ID')
+			.setName('Access key ID')
+			.setDesc('Your R2 access key ID')
 			.addText(text => text
-				.setPlaceholder('Enter your Access Key ID')
+				.setPlaceholder('Enter your access key ID')
 				.setValue(this.plugin.settings.r2AccessKeyId)
 				.onChange(async (value) => {
 					this.plugin.settings.r2AccessKeyId = value;
@@ -43,10 +54,10 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Secret Access Key')
-			.setDesc('Your R2 Secret Access Key')
+			.setName('Secret access key')
+			.setDesc('Your R2 secret access key')
 			.addText(text => {
-				text.setPlaceholder('Enter your Secret Access Key')
+				text.setPlaceholder('Enter your secret access key')
 					.setValue(this.plugin.settings.r2SecretAccessKey);
 				text.inputEl.type = 'password';
 				text.onChange(async (value) => {
@@ -57,8 +68,8 @@ export class R2SyncSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Bucket Name')
-			.setDesc('Your R2 Bucket Name')
+			.setName('Bucket name')
+			.setDesc('Your R2 bucket name')
 			.addText(text => text
 				.setPlaceholder('Enter your bucket name')
 				.setValue(this.plugin.settings.r2BucketName)
@@ -70,7 +81,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Region')
-			.setDesc('R2 Region (usually "auto")')
+			.setDesc('R2 region (usually "auto")')
 			.addText(text => text
 				.setPlaceholder('auto')
 				.setValue(this.plugin.settings.r2Region)
@@ -81,7 +92,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Custom S3 Endpoint')
+			.setName('Custom S3 endpoint')
 			.setDesc('Custom S3 endpoint URL (e.g., https://c09cdd363854405588c7509152ceb0db.eu.r2.cloudflarestorage.com)')
 			.addText(text => text
 				.setPlaceholder('https://your-account-id.r2.cloudflarestorage.com')
@@ -93,10 +104,10 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		// Sync Configuration Section
-		containerEl.createEl('h3', { text: 'Sync Configuration' });
+		new Setting(containerEl).setName('Sync configuration').setHeading();
 
 		new Setting(containerEl)
-			.setName('Base Folder')
+			.setName('Base folder')
 			.setDesc('Folder to sync (leave empty to sync entire vault)')
 			.addText(text => text
 				.setPlaceholder('e.g., Notes or MyVault/Notes')
@@ -107,7 +118,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Auto Sync on Save')
+			.setName('Auto sync on save')
 			.setDesc('Automatically sync files when they are saved')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.autoSync)
@@ -117,7 +128,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Bidirectional Sync')
+			.setName('Bidirectional sync')
 			.setDesc('Download changes from R2 and merge with local files')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.bidirectionalSync)
@@ -127,7 +138,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Merge All Devices')
+			.setName('Merge all devices')
 			.setDesc('Sync files from all devices, not just current vault')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.mergeAllDevices)
@@ -137,7 +148,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Auto Sync Delay')
+			.setName('Auto sync delay')
 			.setDesc('Delay in seconds before auto-sync triggers after file changes (prevents excessive syncing)')
 			.addText(text => text
 				.setPlaceholder('5')
@@ -149,7 +160,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Bidirectional Sync Interval')
+			.setName('Bidirectional sync interval')
 			.setDesc('How often to check for remote changes (in minutes). Lower values = more frequent checks for manually added files')
 			.addText(text => text
 				.setPlaceholder('2')
@@ -161,10 +172,10 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		// Backup Section
-		containerEl.createEl('h3', { text: 'Backup Configuration' });
+		new Setting(containerEl).setName('Backup configuration').setHeading();
 
 		new Setting(containerEl)
-			.setName('Enable Backups')
+			.setName('Enable backups')
 			.setDesc('Create timestamped backups of your files')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableBackups)
@@ -174,7 +185,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Backup Retention Days')
+			.setName('Backup retention days')
 			.setDesc('Number of days to keep backups (0 = keep forever)')
 			.addText(text => text
 				.setPlaceholder('30')
@@ -186,7 +197,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Auto Backup on Sync')
+			.setName('Auto backup on sync')
 			.setDesc('Automatically create backup before syncing')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.autoBackupOnSync)
@@ -196,10 +207,10 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		// Debug Section
-		containerEl.createEl('h3', { text: 'Debug & Development' });
+		new Setting(containerEl).setName('Debug & development').setHeading();
 
 		new Setting(containerEl)
-			.setName('Debug Mode')
+			.setName('Debug mode')
 			.setDesc('Enable detailed logging in the browser console (F12 → Console)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.debugMode)
@@ -210,13 +221,13 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		// Connection Test Section
-		containerEl.createEl('h3', { text: 'Connection & Actions' });
+		new Setting(containerEl).setName('Connection & actions').setHeading();
 
 		new Setting(containerEl)
-			.setName('Test Connection')
+			.setName('Test connection')
 			.setDesc('Test your R2 connection with current settings')
 			.addButton(button => button
-				.setButtonText('Test Connection')
+				.setButtonText('Test connection')
 				.setCta()
 				.onClick(async () => {
 					button.setButtonText('Testing...');
@@ -228,15 +239,15 @@ export class R2SyncSettingTab extends PluginSettingTab {
 					button.setDisabled(false);
 					
 					setTimeout(() => {
-						button.setButtonText('Test Connection');
+						button.setButtonText('Test connection');
 					}, 3000);
 				}));
 
 		new Setting(containerEl)
-			.setName('Manual Sync')
+			.setName('Manual sync')
 			.setDesc('Sync all files to R2 and download remote changes')
 			.addButton(button => button
-				.setButtonText('Sync Now')
+				.setButtonText('Sync now')
 				.setCta()
 				.onClick(async () => {
 					button.setButtonText('Syncing...');
@@ -248,16 +259,16 @@ export class R2SyncSettingTab extends PluginSettingTab {
 					button.setDisabled(false);
 					
 					setTimeout(() => {
-						button.setButtonText('Sync Now');
+						button.setButtonText('Sync now');
 					}, 3000);
 				}));
 
 		// Manual scan-and-sync for pasted files
 		new Setting(containerEl)
-			.setName('Scan and Sync Manually Added Files')
+			.setName('Scan and sync manually added files')
 			.setDesc('Scan the vault for files that were added outside Obsidian and upload only ones missing in R2')
 			.addButton(button => button
-				.setButtonText('Scan and Sync New')
+				.setButtonText('Scan and sync new')
 				.setCta()
 				.onClick(async () => {
 					button.setButtonText('Scanning...');
@@ -269,16 +280,16 @@ export class R2SyncSettingTab extends PluginSettingTab {
 					button.setDisabled(false);
 					
 					setTimeout(() => {
-						button.setButtonText('Scan and Sync New');
+						button.setButtonText('Scan and sync new');
 					}, 3000);
 				}));
 
 
 		new Setting(containerEl)
-			.setName('Create Backup')
+			.setName('Create backup')
 			.setDesc('Create a timestamped backup of current folder')
 			.addButton(button => button
-				.setButtonText('Create Backup')
+				.setButtonText('Create backup')
 				.setCta()
 				.onClick(async () => {
 					button.setButtonText('Creating...');
@@ -290,12 +301,12 @@ export class R2SyncSettingTab extends PluginSettingTab {
 					button.setDisabled(false);
 					
 					setTimeout(() => {
-						button.setButtonText('Create Backup');
+						button.setButtonText('Create backup');
 					}, 3000);
 				}));
 
 		new Setting(containerEl)
-			.setName('Cleanup Old Backups')
+			.setName('Cleanup old backups')
 			.setDesc('Delete backups older than retention period')
 			.addButton(button => button
 				.setButtonText('Cleanup')
@@ -315,13 +326,13 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				}));
 
 		// Import/Export Section
-		containerEl.createEl('h3', { text: 'Import/Export Credentials' });
+		new Setting(containerEl).setName('Import/export credentials').setHeading();
 
 		new Setting(containerEl)
-			.setName('Export Credentials')
+			.setName('Export credentials')
 			.setDesc('Export your R2 credentials as base64 encoded data for easy setup on other devices')
 			.addButton(button => button
-				.setButtonText('Export to Clipboard')
+				.setButtonText('Export to clipboard')
 				.setCta()
 				.onClick(async () => {
 					const credentials = this.plugin.syncManager.exportCredentials();
@@ -329,13 +340,13 @@ export class R2SyncSettingTab extends PluginSettingTab {
 					button.setButtonText('✅ Copied!');
 					
 					setTimeout(() => {
-						button.setButtonText('Export to Clipboard');
+						button.setButtonText('Export to clipboard');
 					}, 3000);
 				}));
 
 		// Import credentials input
 		const importContainer = containerEl.createDiv('r2sync-import-container');
-		importContainer.createEl('h4', { text: 'Import Credentials' });
+		new Setting(importContainer).setName('Import credentials').setHeading();
 		importContainer.createEl('p', { text: 'Paste your base64 encoded credentials data below:' });
 		
 		const importTextArea = importContainer.createEl('textarea', {
@@ -344,10 +355,10 @@ export class R2SyncSettingTab extends PluginSettingTab {
 		});
 
 		new Setting(importContainer)
-			.setName('Import Credentials')
+			.setName('Import credentials')
 			.setDesc('Import R2 credentials from the text area above')
 			.addButton(button => button
-				.setButtonText('Import Credentials')
+				.setButtonText('Import credentials')
 				.setCta()
 				.onClick(async () => {
 					try {
@@ -355,7 +366,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 						if (!credentials) {
 							button.setButtonText('❌ Empty');
 							setTimeout(() => {
-								button.setButtonText('Import Credentials');
+								button.setButtonText('Import credentials');
 							}, 2000);
 							return;
 						}
@@ -374,18 +385,18 @@ export class R2SyncSettingTab extends PluginSettingTab {
 						}
 						
 						setTimeout(() => {
-							button.setButtonText('Import Credentials');
+							button.setButtonText('Import credentials');
 						}, 3000);
-					} catch (error) {
+					} catch {
 						button.setButtonText('❌ Error');
 						setTimeout(() => {
-							button.setButtonText('Import Credentials');
+							button.setButtonText('Import credentials');
 						}, 3000);
 					}
 				}));
 
 		// Status Section
-		containerEl.createEl('h3', { text: 'Status' });
+		new Setting(containerEl).setName('Status').setHeading();
 
 		const statusContainer = containerEl.createDiv('r2sync-status-container');
 		

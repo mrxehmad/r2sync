@@ -11,7 +11,6 @@ main.js
 *.map
 dist/
 build/
-style.css
 
 # IDE and Editor files
 .vscode/

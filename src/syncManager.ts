@@ -1,5 +1,5 @@
 import { App, TFile, Notice } from 'obsidian';
-import { R2ServiceObsidian, R2Config } from './r2ServiceObsidian';
+import { R2ServiceObsidian } from './r2ServiceObsidian';
 import { R2SyncSettings } from './settings';
 
 export class SyncManager {
@@ -302,9 +302,10 @@ export class SyncManager {
 		const vaultName = this.app.vault.getName();
 		const baseFolder = this.settings.baseFolder || vaultName;
 		
+		const configDir = this.app.vault.configDir;
 		return allFiles.filter(file => {
 			// Skip Obsidian internal and backup folders
-			if (file.path.startsWith('.obsidian/')) return false;
+			if (file.path.startsWith(`${configDir}/`)) return false;
 			if (file.path.startsWith('backups/')) return false;
 			
 			// If no base folder specified, sync all files
@@ -488,7 +489,7 @@ export class SyncManager {
 			// Validate required fields
 			if (!credentials.r2AccountId || !credentials.r2AccessKeyId || 
 				!credentials.r2SecretAccessKey || !credentials.r2BucketName) {
-				new Notice('❌ Invalid credentials: Missing required fields');
+				new Notice('Invalid credentials: Missing required fields');
 				return false;
 			}
 			
@@ -504,7 +505,7 @@ export class SyncManager {
 			// Update R2 service
 			this.updateR2Service();
 			
-			new Notice('✅ Credentials imported successfully');
+			new Notice('Credentials imported successfully');
 			return true;
 		} catch (error) {
 			console.error('Import credentials error:', error);

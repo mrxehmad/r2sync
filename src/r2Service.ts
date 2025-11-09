@@ -1,4 +1,4 @@
-import { Notice } from 'obsidian';
+import { Notice, requestUrl, type RequestUrlParam } from 'obsidian';
 
 export interface R2Config {
 	accountId: string;
@@ -62,7 +62,7 @@ export class R2Service {
 		try {
 			const response = await this.makeRequest('GET', key);
 			if (response.ok) {
-				return await response.text();
+				return response.text;
 			}
 			return null;
 		} catch (error) {
@@ -73,17 +73,12 @@ export class R2Service {
 
 	async listFiles(prefix: string = ''): Promise<string[]> {
 		try {
-			
 			const response = await this.makeRequest('GET', `?list-type=2&prefix=${encodeURIComponent(prefix)}`);
 			
-			
-			
 			if (response.ok) {
-				const xml = await response.text();
+				const xml = response.text;
 				const files = this.parseListResponse(xml);
 				return files;
-			} else {
-				// No debug logging
 			}
 			return [];
 		} catch (error) {
@@ -122,22 +117,23 @@ export class R2Service {
 			headers['Content-Length'] = body.length.toString();
 		}
 
+		const param: RequestUrlParam = {
+			method: method as 'GET' | 'POST' | 'PUT' | 'DELETE',
+			url: url,
+			headers: headers,
+			body: body,
+		};
+
+		const response = await requestUrl(param);
 		
-
-		try {
-			const response = await fetch(url, {
-				method,
-				headers,
-				body: body || undefined,
-			});
-
-			
-
-			return response;
-		} catch (error) {
-			
-			throw error;
-		}
+		// Convert Obsidian's requestUrl response to a Response-like object
+		return {
+			ok: response.status >= 200 && response.status < 300,
+			status: response.status,
+			statusText: response.statusText || '',
+			text: response.text,
+			headers: response.headers,
+		} as unknown as Response;
 	}
 
 	private async getAuthHeader(method: string, key: string, body?: string): Promise<string> {

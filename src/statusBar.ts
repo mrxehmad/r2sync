@@ -1,4 +1,4 @@
-import { Component, WorkspaceLeaf } from 'obsidian';
+import { Component } from 'obsidian';
 import { SyncManager } from './syncManager';
 
 export class StatusBarComponent extends Component {
@@ -22,8 +22,6 @@ export class StatusBarComponent extends Component {
 		this.labelEl = this.statusBarItem.createEl('span', { text: '' });
 		this.buttonEl = this.statusBarItem.createEl('span', { text: ' Sync all' });
 		this.buttonEl.addClass('r2sync-action');
-		this.buttonEl.style.marginLeft = '8px';
-		this.buttonEl.style.cursor = 'pointer';
 		this.buttonEl.onclick = async () => {
 			this.showSyncStatus('Scanning vault and syncing...');
 			await this.syncManager.syncAllFiles();
@@ -32,8 +30,6 @@ export class StatusBarComponent extends Component {
 
 		this.missingBtnEl = this.statusBarItem.createEl('span', { text: ' Scan new' });
 		this.missingBtnEl.addClass('r2sync-action');
-		this.missingBtnEl.style.marginLeft = '8px';
-		this.missingBtnEl.style.cursor = 'pointer';
 		this.missingBtnEl.onclick = async () => {
 			this.showSyncStatus('Scanning for manually added files...');
 			await this.syncManager.syncMissingFiles();
@@ -56,7 +52,7 @@ export class StatusBarComponent extends Component {
 	updateStatus() {
 		if (!this.labelEl) return;
 		if (this.syncManager.isSyncInProgress()) {
-			this.labelEl.setText('R2 Sync in progress...');
+			this.labelEl.setText('R2 sync in progress...');
 			this.statusBarItem.addClass('r2sync-syncing');
 		} else {
 			const lastSync = this.syncManager.getLastSyncTime();
@@ -79,9 +75,9 @@ export class StatusBarComponent extends Component {
 					timeAgo = 'Just now';
 				}
 
-				this.labelEl.setText(`R2 Last sync: ${timeAgo}`);
+				this.labelEl.setText(`R2 last sync: ${timeAgo}`);
 			} else {
-				this.labelEl.setText('R2 Sync ready');
+				this.labelEl.setText('R2 sync ready');
 			}
 			this.statusBarItem.removeClass('r2sync-syncing');
 		}

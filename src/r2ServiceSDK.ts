@@ -71,10 +71,7 @@ export class R2ServiceSDK {
 				ContentType: 'text/plain'
 			});
 
-			const response = await this.s3Client.send(command);
-			
-			
-
+			await this.s3Client.send(command);
 			return true;
 		} catch (error) {
 			console.error('R2 upload failed:', error);
@@ -157,10 +154,7 @@ export class R2ServiceSDK {
 				Key: key
 			});
 
-			const response = await this.s3Client.send(command);
-			
-			
-
+			await this.s3Client.send(command);
 			return true;
 		} catch (error) {
 			console.error('R2 delete failed:', error);
