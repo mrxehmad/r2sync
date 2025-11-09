@@ -91,6 +91,6 @@ jobs:
           echo "Creating release for $version"
           gh release create "v$version" \
             --repo "${{ github.repository }}" \
-            --title "v$version" \
+            --title "$version" \
             --notes "$notes" \
             main.js manifest.json style.css
