@@ -1,14 +1,14 @@
 {
 	"name": "r2sync",
-	"version": "1.6.2",
+	"version": "1.6.3",
 	"description": "Sync your notes to Cloudflare R2 with bidirectional backup and automatic sync.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-    	"lint": "eslint .",
-    	"lint:fix": "eslint . --fix"
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix"
 	},
 	"keywords": [],
 	"author": "",
