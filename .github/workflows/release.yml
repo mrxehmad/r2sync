@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.FINE_GRAINED_TOKEN }}
+          fetch-depth: 0  # Fetch all history for generating changelog
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -41,14 +42,55 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $version"
 
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          prev_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "prev_tag=$prev_tag" >> "$GITHUB_OUTPUT"
+          echo "Previous tag: $prev_tag"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          prev_tag="${{ steps.prev_tag.outputs.prev_tag }}"
+          
+          # Start building the changelog
+          changelog="## What's Changed\n\n"
+          
+          # Get commits since last tag (or last 20 if no previous tag)
+          if [ -n "$prev_tag" ]; then
+            commits=$(git log $prev_tag..HEAD --pretty=format:"* %s by @%an" --no-merges)
+            comparison="$prev_tag...v$version"
+          else
+            commits=$(git log --pretty=format:"* %s by @%an" --no-merges -20)
+            comparison="v$version"
+          fi
+          
+          if [ -z "$commits" ]; then
+            changelog="${changelog}No changes detected.\n"
+          else
+            changelog="${changelog}${commits}\n"
+          fi
+          
+          # Add Full Changelog link
+          changelog="${changelog}\n**Full Changelog**: https://github.com/${{ github.repository }}/compare/$comparison"
+          
+          # Save to output
+          echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+          echo -e "$changelog" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.FINE_GRAINED_TOKEN }}
         run: |
           version="${{ steps.version.outputs.version }}"
+          notes="${{ steps.changelog.outputs.changelog }}"
+          
           echo "Creating release for $version"
-          gh release create "$version" \
+          gh release create "v$version" \
             --repo "${{ github.repository }}" \
-            --title "$version" \
-            --notes "Release for version $version" \
+            --title "v$version" \
+            --notes "$notes" \
             main.js manifest.json style.css
