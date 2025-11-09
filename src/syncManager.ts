@@ -489,7 +489,7 @@ export class SyncManager {
 			// Validate required fields
 			if (!credentials.r2AccountId || !credentials.r2AccessKeyId || 
 				!credentials.r2SecretAccessKey || !credentials.r2BucketName) {
-				new Notice('Invalid credentials: Missing required fields');
+				new Notice('Invalid credentials: missing required fields');
 				return false;
 			}
 			
@@ -509,7 +509,7 @@ export class SyncManager {
 			return true;
 		} catch (error) {
 			console.error('Import credentials error:', error);
-			new Notice('❌ Failed to import credentials: Invalid format');
+			new Notice('❌ failed to import credentials: invalid format');
 			return false;
 		}
 	}

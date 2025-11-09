@@ -1,7 +1,8 @@
 import { Notice, requestUrl, type RequestUrlParam } from 'obsidian';
 import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { FetchHttpHandler } from '@smithy/fetch-http-handler';
-import type { HttpRequest, HttpResponse, HttpHandlerOptions } from '@smithy/protocol-http';
+import type { HttpRequest, HttpResponse } from '@smithy/protocol-http';
+import type { HttpHandlerOptions } from '@smithy/types';
 import type { RequestHandlerOutput } from '@smithy/types';
 
 export interface R2Config {

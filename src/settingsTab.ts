@@ -24,7 +24,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName('R2 sync settings').setHeading();
+		new Setting(containerEl).setName('Configuration').setHeading();
 
 		// R2 Configuration Section
 		new Setting(containerEl).setName('Cloudflare R2 configuration').setHeading();
@@ -83,7 +83,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 			.setName('Region')
 			.setDesc('R2 region (usually "auto")')
 			.addText(text => text
-				.setPlaceholder('auto')
+				.setPlaceholder('Auto')
 				.setValue(this.plugin.settings.r2Region)
 				.onChange(async (value) => {
 					this.plugin.settings.r2Region = value;
@@ -211,7 +211,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Debug mode')
-			.setDesc('Enable detailed logging in the browser console (F12 → Console)')
+			.setDesc('Enable detailed logging in the browser console (f12 → console)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.debugMode)
 				.onChange(async (value) => {
@@ -266,7 +266,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 		// Manual scan-and-sync for pasted files
 		new Setting(containerEl)
 			.setName('Scan and sync manually added files')
-			.setDesc('Scan the vault for files that were added outside Obsidian and upload only ones missing in R2')
+			.setDesc('Scan the vault for files that were added outside obsidian and upload only ones missing in R2')
 			.addButton(button => button
 				.setButtonText('Scan and sync new')
 				.setCta()
@@ -337,7 +337,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 				.onClick(async () => {
 					const credentials = this.plugin.syncManager.exportCredentials();
 					await navigator.clipboard.writeText(credentials);
-					button.setButtonText('✅ Copied!');
+					button.setButtonText('✅ copied!');
 					
 					setTimeout(() => {
 						button.setButtonText('Export to clipboard');
@@ -364,7 +364,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 					try {
 						const credentials = importTextArea.value.trim();
 						if (!credentials) {
-							button.setButtonText('❌ Empty');
+							button.setButtonText('❌ empty');
 							setTimeout(() => {
 								button.setButtonText('Import credentials');
 							}, 2000);
@@ -374,21 +374,21 @@ export class R2SyncSettingTab extends PluginSettingTab {
 						const success = this.plugin.syncManager.importCredentials(credentials);
 						
 						if (success) {
-							button.setButtonText('✅ Imported!');
+							button.setButtonText('✅ imported!');
 							await this.plugin.saveSettings();
 							// Clear the text area
 							importTextArea.value = '';
 							// Refresh the settings display
 							this.display();
 						} else {
-							button.setButtonText('❌ Failed');
+							button.setButtonText('❌ failed');
 						}
 						
 						setTimeout(() => {
 							button.setButtonText('Import credentials');
 						}, 3000);
 					} catch {
-						button.setButtonText('❌ Error');
+						button.setButtonText('❌ error');
 						setTimeout(() => {
 							button.setButtonText('Import credentials');
 						}, 3000);
@@ -413,7 +413,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		if (this.plugin.settings.syncInProgress) {
 			statusContainer.createEl('p', { 
-				text: '🔄 Sync in progress...' 
+				text: '🔄 sync in progress...' 
 			});
 		}
 	}

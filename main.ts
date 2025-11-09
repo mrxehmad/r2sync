@@ -31,10 +31,10 @@ export default class R2SyncPlugin extends Plugin {
 		this.addChild(this.statusBar);
 
 		// Add manual sync button to left ribbon
-		const ribbonIconEl = this.addRibbonIcon('sync', 'R2 Sync', (evt: MouseEvent) => {
+		const ribbonIconEl = this.addRibbonIcon('sync', 'R2 sync', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
 			this.statusBar.showSyncStatus('Starting manual sync...');
-			this.syncManager.syncAllFiles();
+			void this.syncManager.syncAllFiles();
 		});
 		ribbonIconEl.addClass('r2sync-ribbon-class');
 
