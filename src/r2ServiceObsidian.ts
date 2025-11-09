@@ -65,14 +65,21 @@ class ObsidianHttpHandler extends FetchHttpHandler {
 			contentType = transformedHeaders["content-type"];
 		}
 
-		let transformedBody: Uint8Array | undefined = undefined;
+		let transformedBody: string | ArrayBuffer | undefined = undefined;
 		if (body) {
 			if (ArrayBuffer.isView(body)) {
-				transformedBody = new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
+				const uint8Array = new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
+				// Convert Uint8Array to ArrayBuffer by creating a new buffer and copying data
+				const newBuffer = new ArrayBuffer(uint8Array.length);
+				new Uint8Array(newBuffer).set(uint8Array);
+				transformedBody = newBuffer;
 			} else if (body instanceof Uint8Array) {
-				transformedBody = body;
+				// Convert Uint8Array to ArrayBuffer by creating a new buffer and copying data
+				const newBuffer = new ArrayBuffer(body.length);
+				new Uint8Array(newBuffer).set(body);
+				transformedBody = newBuffer;
 			} else if (typeof body === 'string') {
-				transformedBody = new TextEncoder().encode(body);
+				transformedBody = body;
 			}
 		}
 
