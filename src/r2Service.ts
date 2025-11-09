@@ -97,7 +97,7 @@ export class R2Service {
 		}
 	}
 
-	private async makeRequest(method: string, key: string, body?: string): Promise<Response> {
+	private async makeRequest(method: string, key: string, body?: string): Promise<{ ok: boolean; status: number; text: string; headers: Record<string, string> }> {
 		// Use custom endpoint if provided, otherwise use default R2 endpoint
 		const baseUrl = this.config.customEndpoint || `https://${this.config.accountId}.r2.cloudflarestorage.com`;
 		const url = `${baseUrl}/${this.config.bucketName}/${key}`;
@@ -126,14 +126,13 @@ export class R2Service {
 
 		const response = await requestUrl(param);
 		
-		// Convert Obsidian's requestUrl response to a Response-like object
+		// Return response with text as string property
 		return {
 			ok: response.status >= 200 && response.status < 300,
 			status: response.status,
-			statusText: response.statusText || '',
 			text: response.text,
 			headers: response.headers,
-		} as unknown as Response;
+		};
 	}
 
 	private async getAuthHeader(method: string, key: string, body?: string): Promise<string> {

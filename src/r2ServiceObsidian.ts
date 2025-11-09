@@ -1,6 +1,8 @@
 import { Notice, requestUrl, type RequestUrlParam } from 'obsidian';
 import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { FetchHttpHandler } from '@smithy/fetch-http-handler';
+import type { HttpRequest, HttpResponse, HttpHandlerOptions } from '@smithy/protocol-http';
+import type { RequestHandlerOutput } from '@smithy/types';
 
 export interface R2Config {
 	accountId: string;
@@ -14,7 +16,7 @@ export interface R2Config {
 
 // Custom HTTP handler that uses Obsidian's requestUrl instead of fetch
 class ObsidianHttpHandler extends FetchHttpHandler {
-	async handle(request: { path: string; query?: Record<string, string>; protocol: string; hostname: string; port?: number; method: string; headers: Record<string, string>; body?: Uint8Array }, options: { abortSignal?: AbortSignal } = {}): Promise<{ response: { headers: Record<string, string>; statusCode: number; body: ReadableStream<Uint8Array> } }> {
+	async handle(request: HttpRequest, options: HttpHandlerOptions = {}): Promise<RequestHandlerOutput<HttpResponse>> {
 		if (options.abortSignal?.aborted) {
 			const abortError = new Error("Request aborted");
 			abortError.name = "AbortError";
@@ -23,9 +25,21 @@ class ObsidianHttpHandler extends FetchHttpHandler {
 
 		let path = request.path;
 		if (request.query) {
-			const queryString = new URLSearchParams(request.query).toString();
-			if (queryString) {
-				path += `?${queryString}`;
+			const queryParams: string[] = [];
+			for (const [key, value] of Object.entries(request.query)) {
+				if (value === null || value === undefined) {
+					continue;
+				}
+				if (Array.isArray(value)) {
+					for (const v of value) {
+						queryParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`);
+					}
+				} else {
+					queryParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+				}
+			}
+			if (queryParams.length > 0) {
+				path += `?${queryParams.join('&')}`;
 			}
 		}
 
@@ -35,12 +49,14 @@ class ObsidianHttpHandler extends FetchHttpHandler {
 		const body = method === "GET" || method === "HEAD" ? undefined : request.body;
 
 		const transformedHeaders: Record<string, string> = {};
-		for (const key of Object.keys(request.headers)) {
+		for (const [key, value] of Object.entries(request.headers)) {
 			const keyLower = key.toLowerCase();
 			if (keyLower === "host" || keyLower === "content-length") {
 				continue;
 			}
-			transformedHeaders[keyLower] = request.headers[key];
+			if (value !== undefined) {
+				transformedHeaders[keyLower] = value;
+			}
 		}
 
 		let contentType: string | undefined = undefined;
@@ -48,9 +64,15 @@ class ObsidianHttpHandler extends FetchHttpHandler {
 			contentType = transformedHeaders["content-type"];
 		}
 
-		let transformedBody: Uint8Array | undefined = body;
-		if (ArrayBuffer.isView(body)) {
-			transformedBody = new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
+		let transformedBody: Uint8Array | undefined = undefined;
+		if (body) {
+			if (ArrayBuffer.isView(body)) {
+				transformedBody = new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
+			} else if (body instanceof Uint8Array) {
+				transformedBody = body;
+			} else if (typeof body === 'string') {
+				transformedBody = new TextEncoder().encode(body);
+			}
 		}
 
 		const param: RequestUrlParam = {
