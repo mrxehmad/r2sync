@@ -7,6 +7,7 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 	// Test connection command
 	plugin.addCommand({
 		id: 'test-connection',
+		name: 'Test r2 connection',
 		callback: async () => {
 			statusBar.showSyncStatus('🔄 Testing r2 connection...');
 			await syncManager.testConnection();
@@ -20,7 +21,6 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 		name: 'Sync current file to r2',
 		editorCallback: async (editor, view) => {
 			const file = view.file;
-	name: 'Test r2 connection',
 			if (file) {
 				statusBar.showSyncStatus(`🔄 Syncing ${file.name}...`);
 				await syncManager.syncFile(file);
