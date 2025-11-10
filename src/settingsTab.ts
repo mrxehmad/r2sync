@@ -27,13 +27,13 @@ export class R2SyncSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName('Configuration').setHeading();
 
 		// R2 Configuration Section
-		new Setting(containerEl).setName('Cloudflare R2 configuration').setHeading();
+		new Setting(containerEl).setName('Cloudflare r2 configuration').setHeading();
 
 		new Setting(containerEl)
 			.setName('Account ID')
-			.setDesc('Your Cloudflare R2 account ID')
+			.setDesc('Your Cloudflare r2 account ID')
 			.addText(text => text
-				.setPlaceholder('Enter your R2 account ID')
+				.setPlaceholder('Enter your r2 account ID')
 				.setValue(this.plugin.settings.r2AccountId)
 				.onChange(async (value) => {
 					this.plugin.settings.r2AccountId = value;
@@ -43,7 +43,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Access key ID')
-			.setDesc('Your R2 access key ID')
+			.setDesc('Your r2 access key ID')
 			.addText(text => text
 				.setPlaceholder('Enter your access key ID')
 				.setValue(this.plugin.settings.r2AccessKeyId)
@@ -55,7 +55,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Secret access key')
-			.setDesc('Your R2 secret access key')
+			.setDesc('Your r2 secret access key')
 			.addText(text => {
 				text.setPlaceholder('Enter your secret access key')
 					.setValue(this.plugin.settings.r2SecretAccessKey);
@@ -69,7 +69,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Bucket name')
-			.setDesc('Your R2 bucket name')
+			.setDesc('Your r2 bucket name')
 			.addText(text => text
 				.setPlaceholder('Enter your bucket name')
 				.setValue(this.plugin.settings.r2BucketName)
@@ -81,7 +81,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Region')
-			.setDesc('R2 region (usually "auto")')
+			.setDesc('r2 region (usually "auto")')
 			.addText(text => text
 				.setPlaceholder('Auto')
 				.setValue(this.plugin.settings.r2Region)
@@ -93,12 +93,12 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Custom S3 endpoint')
-			.setDesc('Custom S3 endpoint URL (e.g., https://c09cdd363854405588c7509152ceb0db.eu.r2.cloudflarestorage.com)')
+			.setDesc('Custom S3 endpoint URL (e.g., https://id.r2.cloudflarestorage.com)')
 			.addText(text => text
 				.setPlaceholder('https://your-account-id.r2.cloudflarestorage.com')
 				.setValue(this.plugin.settings.customEndpoint)
 				.onChange(async (value) => {
-					this.plugin.settings.customEndpoint = value;
+					this.plugin.settings.customEndpoint = value;	
 					await this.plugin.saveSettings();
 					this.plugin.syncManager.updateSettings(this.plugin.settings);
 				}));
@@ -129,7 +129,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Bidirectional sync')
-			.setDesc('Download changes from R2 and merge with local files')
+			.setDesc('Download changes from r2 and merge with local files')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.bidirectionalSync)
 				.onChange(async (value) => {
@@ -225,7 +225,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Test connection')
-			.setDesc('Test your R2 connection with current settings')
+			.setDesc('Test your r2 connection with current settings')
 			.addButton(button => button
 				.setButtonText('Test connection')
 				.setCta()
@@ -245,7 +245,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Manual sync')
-			.setDesc('Sync all files to R2 and download remote changes')
+			.setDesc('Sync all files to r2 and download remote changes')
 			.addButton(button => button
 				.setButtonText('Sync now')
 				.setCta()
@@ -266,7 +266,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 		// Manual scan-and-sync for pasted files
 		new Setting(containerEl)
 			.setName('Scan and sync manually added files')
-			.setDesc('Scan the vault for files that were added outside obsidian and upload only ones missing in R2')
+			.setDesc('Scan the vault for files that were added outside obsidian and upload only ones missing in r2')
 			.addButton(button => button
 				.setButtonText('Scan and sync new')
 				.setCta()
@@ -330,7 +330,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Export credentials')
-			.setDesc('Export your R2 credentials as base64 encoded data for easy setup on other devices')
+			.setDesc('Export your r2 credentials as base64 encoded data for easy setup on other devices')
 			.addButton(button => button
 				.setButtonText('Export to clipboard')
 				.setCta()
@@ -356,7 +356,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(importContainer)
 			.setName('Import credentials')
-			.setDesc('Import R2 credentials from the text area above')
+			.setDesc('Import r2 credentials from the text area above')
 			.addButton(button => button
 				.setButtonText('Import credentials')
 				.setCta()

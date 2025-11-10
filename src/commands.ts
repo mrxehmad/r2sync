@@ -7,9 +7,8 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 	// Test connection command
 	plugin.addCommand({
 		id: 'test-connection',
-		name: 'Test R2 connection',
 		callback: async () => {
-			statusBar.showSyncStatus('🔄 Testing R2 connection...');
+			statusBar.showSyncStatus('🔄 Testing r2 connection...');
 			await syncManager.testConnection();
 		}
 	});
@@ -18,9 +17,10 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 	// Sync current file command
 	plugin.addCommand({
 		id: 'sync-current-file',
-		name: 'Sync current file to R2',
+		name: 'Sync current file to r2',
 		editorCallback: async (editor, view) => {
 			const file = view.file;
+	name: 'Test r2 connection',
 			if (file) {
 				statusBar.showSyncStatus(`🔄 Syncing ${file.name}...`);
 				await syncManager.syncFile(file);
@@ -31,7 +31,7 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 	// Export credentials command
 	plugin.addCommand({
 		id: 'export-credentials',
-		name: 'Export R2 credentials',
+		name: 'Export r2 credentials',
 		callback: async () => {
 			const credentials = syncManager.exportCredentials();
 			await navigator.clipboard.writeText(credentials);
@@ -42,7 +42,7 @@ export function registerCommands(plugin: Plugin & { settings: R2SyncSettings; sa
 	// Manual sync command (moved to last position)
 	plugin.addCommand({
 		id: 'manual-sync',
-		name: 'Sync to R2 (with remote changes)',
+		name: 'Sync to r2 (with remote changes)',
 		callback: async () => {
 			statusBar.showSyncStatus('Starting manual sync...');
 			await syncManager.syncAllFiles();
