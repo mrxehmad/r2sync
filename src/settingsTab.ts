@@ -33,7 +33,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 			.setName('Account ID')
 			.setDesc('Your Cloudflare r2 account ID')
 			.addText(text => text
-				.setPlaceholder('Enter your r2 account ID')
+				.setPlaceholder('Enter your R2 account ID')
 				.setValue(this.plugin.settings.r2AccountId)
 				.onChange(async (value) => {
 					this.plugin.settings.r2AccountId = value;
