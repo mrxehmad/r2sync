@@ -81,7 +81,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Region')
-			.setDesc('r2 region (usually "auto")')
+			.setDesc('R2 region (usually "auto")')
 			.addText(text => text
 				.setPlaceholder('Auto')
 				.setValue(this.plugin.settings.r2Region)
@@ -266,7 +266,7 @@ export class R2SyncSettingTab extends PluginSettingTab {
 		// Manual scan-and-sync for pasted files
 		new Setting(containerEl)
 			.setName('Scan and sync manually added files')
-			.setDesc('Scan the vault for files that were added outside obsidian and upload only ones missing in r2')
+			.setDesc('Scan the vault for files that were added outside Obsidian and upload only ones missing in R2')
 			.addButton(button => button
 				.setButtonText('Scan and sync new')
 				.setCta()
