@@ -100,7 +100,7 @@ jobs:
           notes="${{ steps.changelog.outputs.changelog }}"
           
           echo "Creating release for $version"
-          gh release create "v$version" \
+          gh release create "$version" \
             --repo "${{ github.repository }}" \
             --title "$version" \
             --notes "$notes" \
